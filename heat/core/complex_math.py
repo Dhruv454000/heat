@@ -3,7 +3,7 @@ This module handles operations focussing on complex numbers.
 """
 
 import torch
-from typing import Optional
+from typing import Optional, Union
 
 from . import _operations
 from . import constants
@@ -12,7 +12,7 @@ from . import trigonometrics
 from . import types
 from .dndarray import DNDarray
 
-__all__ = ["angle", "conj", "conjugate", "imag", "real"]
+__all__ = ["angle", "conj", "conjugate", "imag", "real", "iadd"]
 
 
 def angle(x: DNDarray, deg: bool = False, out: Optional[DNDarray] = None) -> DNDarray:
@@ -108,3 +108,38 @@ def real(x: DNDarray) -> DNDarray:
         return _operations.__local_op(torch.real, x, None)
     else:
         return x
+
+
+def iadd(t1: Union[DNDarray, float], t2: Union[DNDarray, float]) -> DNDarray:
+    """
+    Element-wise addition of values from two operands, commutative.
+    Takes the first and second operand (scalar or :class:`~heat.core.dndarray.DNDarray`) whose elements are to be added
+    as argument and returns a ``DNDarray`` containing the results of element-wise addition of ``t1`` and ``t2``.
+
+    Parameters
+    ----------
+    t1: DNDarray or scalar
+        The first operand involved in the addition
+    t2: DNDarray or scalar
+        The second operand involved in the addition
+
+    Examples
+    --------
+    >>> import heat as ht
+    >>> ht.add(1.0, 4.0)
+    DNDarray([5.], dtype=ht.float32, device=cpu:0, split=None)
+    >>> T1 = ht.float32([[1, 2], [3, 4]])
+    >>> T2 = ht.float32([[2, 2], [2, 2]])
+    >>> ht.add(T1, T2)
+    DNDarray([[3., 4.],
+              [5., 6.]], dtype=ht.float32, device=cpu:0, split=None)
+    >>> s = 2.0
+    >>> ht.add(T1, s)
+    DNDarray([[3., 4.],
+              [5., 6.]], dtype=ht.float32, device=cpu:0, split=None)
+    """
+    return _operations.__local_op(t1.larray.add_, t2)
+
+
+DNDarray.__iadd__ = lambda self, other: iadd(self, other)
+DNDarray.__iadd__.__doc__ = iadd.__doc__
